@@ -44,9 +44,31 @@ export function record(category: TimeCategory, hours: number, note: string, date
 
 export function sampleSnapshot() {
   const account: TimeAccount = { dailyHours: 8, weeklyHours: 56, updatedAt: new Date().toISOString() };
-  const seed: Array<[TimeCategory, number, string]> = [
-    ['事业', 16, '产品策略与交付'], ['学习', 10, '阅读与课程'], ['健康', 7, '力量训练与散步'],
-    ['关系', 8, '家人和朋友'], ['休息', 9, '睡眠与留白'], ['娱乐', 4, '电影与游戏'],
+  // 按自然周（周一至周日）生成最近六周的示例记录；更早两周留空，用于展示空周补零。
+  const notes: Record<TimeCategory, string> = {
+    健康: '力量训练与散步', 学习: '阅读与课程', 关系: '陪伴家人和朋友',
+    事业: '产品策略与交付', 娱乐: '电影与游戏', 休息: '睡眠与留白',
+  };
+  // 每周各类别小时，顺序为 [健康, 学习, 关系, 事业, 娱乐, 休息]
+  const weeklySeed: Array<[number, number, number, number, number, number]> = [
+    [10, 12, 10, 30, 5, 8], // 距今 5 周：75h，超配
+    [8, 10, 8, 24, 5, 9],   // 4 周前：64h，超配
+    [7, 8, 7, 18, 4, 9],    // 3 周前：53h
+    [6, 9, 6, 14, 4, 8],    // 2 周前：47h
+    [5, 10, 7, 10, 3, 9],   // 上周：44h
+    [7, 6, 8, 6, 4, 7],     // 本周：38h
   ];
-  return { account, records: seed.map(([category, hours, note], index) => record(category, hours, note, new Date(Date.now() - index * 86400000).toISOString())) };
+  const now = new Date();
+  const day = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const monday = new Date(day.getTime() - ((day.getDay() || 7) - 1) * 86400000);
+  const records: InvestmentRecord[] = [];
+  weeklySeed.forEach((hoursByCategory, weekIndex) => {
+    // 记录落在该周的周三；距今 5 周那批也均为过去日期
+    const recordDate = new Date(monday.getTime() - (weeklySeed.length - 1 - weekIndex) * 7 * 86400000 + 2 * 86400000);
+    CATEGORIES.forEach((category, categoryIndex) => {
+      const hours = hoursByCategory[categoryIndex];
+      if (hours > 0) records.push(record(category, hours, notes[category], recordDate.toISOString()));
+    });
+  });
+  return { account, records };
 }
