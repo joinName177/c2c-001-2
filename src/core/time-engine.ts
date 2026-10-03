@@ -42,11 +42,12 @@ export function record(category: TimeCategory, hours: number, note: string, date
   return { id: `time-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, category, hours: Math.max(0.5, Number(hours) || 0.5), note: note.trim() || '未命名投资', date };
 }
 
+// 演示数据分布在最近约三周内，让逐周趋势视图开箱即有多个活跃周
 export function sampleSnapshot() {
   const account: TimeAccount = { dailyHours: 8, weeklyHours: 56, updatedAt: new Date().toISOString() };
-  const seed: Array<[TimeCategory, number, string]> = [
-    ['事业', 16, '产品策略与交付'], ['学习', 10, '阅读与课程'], ['健康', 7, '力量训练与散步'],
-    ['关系', 8, '家人和朋友'], ['休息', 9, '睡眠与留白'], ['娱乐', 4, '电影与游戏'],
+  const seed: Array<[TimeCategory, number, string, number]> = [
+    ['事业', 16, '产品策略与交付', 0], ['学习', 10, '阅读与课程', 2], ['健康', 7, '力量训练与散步', 4],
+    ['关系', 8, '家人和朋友', 8], ['休息', 9, '睡眠与留白', 11], ['娱乐', 4, '电影与游戏', 15],
   ];
-  return { account, records: seed.map(([category, hours, note], index) => record(category, hours, note, new Date(Date.now() - index * 86400000).toISOString())) };
+  return { account, records: seed.map(([category, hours, note, daysAgo]) => record(category, hours, note, new Date(Date.now() - daysAgo * 86400000).toISOString())) };
 }
